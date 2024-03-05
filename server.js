@@ -1,14 +1,17 @@
 const express = require('express');
 const path = require('path');
 const hbs = require('express-handlebars');
+const multer = require('multer');
 
 const app = express();
 app.engine('.hbs', hbs());
 app.set('view engine', '.hbs');
 
 app.use(express.static(path.join(__dirname, '/public')));
-
 app.use(express.urlencoded({ extended: false }));
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.get('/', (req, res) => {
   res.render('index');
@@ -34,12 +37,12 @@ app.get('/hello/:name', (req, res) => {
   res.render('hello', { name: req.params.name });
 });
 
-app.post('/contact/send-message', (req, res) => {
-
+app.post('/contact/send-message', upload.single('file'), (req, res) => {
   const { author, sender, title, message } = req.body;
+  const file = req.file;
 
-  if(author && sender && title && message) {
-    res.render('contact', { isSent: true });
+  if(author && sender && title && file && message) {
+   res.render('contact', { isSent: true, fileName: file.originalname });
   }
   else {
     res.render('contact', { isError: true });
